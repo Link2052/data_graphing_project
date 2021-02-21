@@ -1,5 +1,5 @@
 # data_graphing_project
-A Python GUI interface for craping CSV files to graph the data
+A Python GUI interface for graphing CSV files to graph the data
 ==============================================================
 Required modules:
 time

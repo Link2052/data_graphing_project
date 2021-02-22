@@ -140,5 +140,7 @@ class App(Frame):
 		
 		
 		
-app = App(Tk())
+root = Tk()
+root.resizable(width = False, height = False)
+app = App(root)
 app.mainloop()

@@ -1,4 +1,5 @@
 from tkinter import filedialog as F
+from tkinter import messagebox as M
 from tkinter import ttk
 from tkinter import *
 import time
@@ -9,11 +10,19 @@ try:
 	from matplotlib import pyplot as graph
 except:
 	os.system('python3 pip -m install matplotlib')
+	from matplotlib import pyplot as graph
 
 try:
 	import numpy as ny
 except:
 	os.system('python3 pip -m install numpy')
+	import numpy as ny
+	
+try:
+	from openpyxl.utils import column_index_from_string
+except:
+	os.system('python3 pip -m install openpyxl')
+	from openpyxl.utils import column_index_from_string
 
 #from openpyxl import load_workbook
 #from openpyxl.utils import get_column_letter
@@ -63,7 +72,9 @@ class App(Frame):
 		self.e0.insert(0, self.filepath)
 	
 	def process(self):
-		
+		__cols_collected_flag__ = 0
+		__file_opened_flag__ = 0
+		__file_read_flag__ = 0
 		try:		
 			if self.filename:
 				pass
@@ -92,53 +103,60 @@ class App(Frame):
 		
 		workbook.close()'''
 		__key_words__ = ['time', 'TIME', 'Time']
-		
-		file = open(self.filename, 'r')
-		raw_data = ny.array([line.split(',') for line in file])
-		file.close()
-		ind = [[], []]
-		[[[ind[0].append(item0) for item0 in line[0]], [ind[1].append(item1) for item1 in line[1]]] for line in [ny.where(ny.core.defchararray.find(raw_data, str)==0) for str in __key_words__]]
-		__srow__ = ind[0][0]
-		__cols__ = [int(i) for i in self.e1.get().split(',')]
-		
-		labels = [raw_data[__srow__][i] for i in __cols__]
-		__cols__.insert(0, ind[1][0])
-		proc_data = ny.array([[float(item) for item in line] for line in raw_data[__srow__+1:, __cols__]])
-		proc_data = proc_data.T
-		
-		'''>>> graph.figure(0)
-		<Figure size 640x480 with 0 Axes>
-		>>> graph.plot(x, y, 'r')
-		[<matplotlib.lines.Line2D object at 0x0F76DD48>]
-		>>> graph.figrue(1)
-		Traceback (most recent call last):
-		  File "<stdin>", line 1, in <module>
-		AttributeError: module 'matplotlib.pyplot' has no attribute 'figrue'
-		>>> graph.figure(1)
-		<Figure size 640x480 with 1 Axes>
-		>>> graph.plot(x, z)
-		[<matplotlib.lines.Line2D object at 0x0F76DE98>]
-		>>> graph.figure(0)
-		<Figure size 640x480 with 1 Axes>
-		>>> graph.plot(x, rr)
-		[<matplotlib.lines.Line2D object at 0x0F77E058>]
-		>>> graph.show()'''
-		self.fig_group = []
-		for i in range(len(__cols__)-1):
-			self.fig_group.append(graph.figure(i))
-			current_figure = self.fig_group[-1].add_subplot(111)
-			current_figure.plot(proc_data[0], proc_data[i])
-			graph.grid()
-			
-			current_figure.set_title("Thermocouple Data "+labels[i])
-			current_figure.set_xlabel("Time [min]")
-			current_figure.set_ylabel("Temp. ["+u'\N{DEGREE SIGN}'+"C]")
-			
-			time_str = time.strftime('%Y_%m_%d-%H_%M_%S')
-			
-			self.fig_group[-1].savefig(self.filesavedirc+'/'+labels[i]+'_'+time_str+'.png', format = 'png')
-		
-		
+		try:
+			file = open(self.filename, 'r')
+			__file_opened_flag__ = 1
+		except FileNotFoundError:
+			M.showerror(message = 'File Not Found Error:\n"'+self.filename+'"\nNot found!', title = 'Error!')
+				    
+		if __file_opened_flag__:
+			try:
+				raw_data = ny.array([line.split(',') for line in file])
+				__file_read_flag__ = 1
+			except:
+				M.showerror(message = 'File Read Error:\n"'+self.filename+'"\nCould not opened!\n\nDid you use the wrong type of file?', title = 'Error!')
+			if __file_read_flag__:
+				file.close()
+				ind = [[], []]
+				[[[ind[0].append(item0) for item0 in line[0]], [ind[1].append(item1) for item1 in line[1]]] for line in [ny.where(ny.core.defchararray.find(raw_data, str)==0) for str in __key_words__]]
+				__srow__ = ind[0][0]
+				cols_data = self.e1.get().split(',')
+				try:
+					try:	
+						__cols__ = [int(i) for i in cols_data]
+					except ValueError:
+						__cols__ = []
+						for item in cols_data:
+							try:
+								__cols__.append(int(item))
+							except ValueError:
+								__cols__.append(column_index_from_string(item))
+					__cols_collected_flag__ = 1
+				except:
+					M.showerror(message = 'Column Information Error:\nCould not understand column selection information!', title = 'Error!')
+
+				if __cols_collected_flag__:
+					labels = [raw_data[__srow__][i] for i in __cols__]
+					__cols__.insert(0, ind[1][0])
+					proc_data = ny.array([[float(item) for item in line] for line in raw_data[__srow__+1:, __cols__]])
+					proc_data = proc_data.T
+
+					self.fig_group = []
+					for i in range(len(__cols__)-1):
+						self.fig_group.append(graph.figure(i))
+						current_figure = self.fig_group[-1].add_subplot(111)
+						current_figure.plot(proc_data[0], proc_data[i])
+						graph.grid()
+
+						current_figure.set_title("Thermocouple Data "+labels[i])
+						current_figure.set_xlabel("Time [min]")
+						current_figure.set_ylabel("Temp. ["+u'\N{DEGREE SIGN}'+"C]")
+
+						time_str = time.strftime('%Y_%m_%d-%H_%M_%S')
+
+						self.fig_group[-1].savefig(self.filesavedirc+'/'+labels[i]+'_'+time_str+'.png', format = 'png')
+
+					M.showinfo(message = 'Graphs Generated Successfully!\nFind images stored in:\n'+self.filesavedirc, title = 'Process Complete!')
 		
 root = Tk()
 root.resizable(width = False, height = False)

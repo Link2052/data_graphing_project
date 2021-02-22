@@ -96,9 +96,8 @@ class App(Frame):
 		file = open(self.filename, 'r')
 		raw_data = ny.array([line.split(',') for line in file])
 		file.close()
-		index = ny.where(ny.core.defchararray.find(A, ('TIME', 'time')==0)
 		ind = [[], []]
-		[[[ind[0].append(item0) for item0 in line[0]], [ind[1].append(item1) for item1 in line[1]]] for line in [ny.where(ny.core.defchararray.find(B, str)==0) for str in __key_words__]]
+		[[[ind[0].append(item0) for item0 in line[0]], [ind[1].append(item1) for item1 in line[1]]] for line in [ny.where(ny.core.defchararray.find(raw_data, str)==0) for str in __key_words__]]
 		__srow__ = ind[0][0]
 		__cols__ = [int(i) for i in self.e1.get().split(',')]
 		
@@ -131,11 +130,11 @@ class App(Frame):
 			current_figure.plot(proc_data[0], proc_data[i])
 			graph.grid()
 			
-			current_figure.set_title("Thermocouple data "+labels[i])
+			current_figure.set_title("Thermocouple Data "+labels[i])
 			current_figure.set_xlabel("Time [min]")
 			current_figure.set_ylabel("Temp. ["+u'\N{DEGREE SIGN}'+"C]")
 			
-			time_str = time.strftime(%Y_%m_%d-%H_%M_%S)
+			time_str = time.strftime('%Y_%m_%d-%H_%M_%S')
 			
 			self.fig_group[-1].savefig(self.filesavedirc+'/'+labels[i]+'_'+time_str+'.png', format = 'png')
 		

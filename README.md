@@ -8,7 +8,3 @@ matplotlib
 numpy
 os
 openpyxl
-
-*WARNING* 
-Stability uknown!!! 
-Not tested rigorously!!!

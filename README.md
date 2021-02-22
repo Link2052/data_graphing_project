@@ -7,6 +7,7 @@ tkinter
 matplotlib
 numpy
 os
+openpyxl
 
 *WARNING* 
 Stability uknown!!! 

@@ -20,9 +20,11 @@ except:
 	
 try:
 	from openpyxl.utils import column_index_from_string
+	from openpyxl.utils import get_column_letter
 except:
 	os.system('python3 pip -m install openpyxl')
 	from openpyxl.utils import column_index_from_string
+	from openpyxl.utils import get_column_letter
 
 #from openpyxl import load_workbook
 #from openpyxl.utils import get_column_letter
@@ -75,11 +77,8 @@ class App(Frame):
 		__cols_collected_flag__ = 0
 		__file_opened_flag__ = 0
 		__file_read_flag__ = 0
-		try:		
-			if self.filename:
-				pass
-		except:
-			self.filename = self.e0.get()
+		
+		self.filename = self.e0.get()
 		
 		self.filesavedirc = os.path.dirname(self.filename)
 		
@@ -140,6 +139,42 @@ class App(Frame):
 					__cols__.insert(0, ind[1][0])
 					proc_data = ny.array([[float(item) for item in line] for line in raw_data[__srow__+1:, __cols__]])
 					proc_data = proc_data.T
+					
+					__mu__  = [data.mean().round(3) for data in proc_data]
+					__std__ = [data.std().round(3) for data in proc_data]
+					__var__ = [data.std().round(3) for data in proc_data]
+					__max__ = [[ny.where(data == data.max())[0][0], max(data).round(3)] for data in proc_data]
+					__min__ = [[ny.where(data == data.min())[0][0], min(data).round(3)] for data in proc_data]
+					
+					data_analysis = '''###===================================================================================================
+### Data Analysis of Data in : '''+self.filename+'''
+###===================================================================================================
+### Generated on '''+time.strftime('%m/%d/%Y @ %H:%M:%S')+'''
+### 
+###	Selected Columns for Analysis:
+###	
+### '''+'\n### '.join([get_column_letter(__cols__[i])+' : '+labels[i-1] for i in range(1, len(__cols__))])+'''
+###
+###===================================================================================================
+### Statistical Data from each Column:
+###===================================================================================================
+###	'''
+					
+					for i in range(1, len(__cols__)):
+						temp = ''
+						temp += '### Label : '+labels[i-1]+' (Column : '+get_column_letter(__cols__[i])+')\n###\n'
+						temp += '### mean  : '+str(__mu__[i-1])+u'\N{DEGREE SIGN}'+'C \n'
+						temp += '### stdev : '+str(__std__[i-1])+u'\N{DEGREE SIGN}'+'C \n'
+						temp += '### var   : '+str(__var__[i-1])+u'\N{DEGREE SIGN}'+'C \n'
+						temp += '### max   : '+str(__max__[i-1][1])+u'\N{DEGREE SIGN}'+'C : @ t = '+str(proc_data[0][__max__[i-1][0]].round(3))+' [time units]\n'
+						temp += '### min   : '+str(__min__[i-1][1])+u'\N{DEGREE SIGN}'+'C : @ t = '+str(proc_data[0][__min__[i-1][0]].round(3))+' [time units]\n'
+						temp += '### range : '+str((__max__[i-1][1]-__min__[i-1][1]).round(3))+u'\N{DEGREE SIGN}'+'C \n'
+						temp += '###===================================================================================================\n'
+						data_analysis += temp
+					
+					file = open(self.filesavedirc+'/'+'Analysis_Data_'+time.strftime('%Y_%m_%d-%H_%M_%S')+'.txt', 'w')
+					file.write(data_analysis)
+					file.close()
 
 					self.fig_group = []
 					for i in range(len(__cols__)-1):
